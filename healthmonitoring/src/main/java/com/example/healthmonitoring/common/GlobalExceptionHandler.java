@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -47,29 +48,43 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse> handleNoSuchElementException(NoSuchElementException ex) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.NOT_FOUND.value())
+            .error("Not Found")
+            .message(ex.getMessage() != null ? ex.getMessage() : "Resource not found")
+            .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String error = "Internal Server Error";
+        String message = ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred";
 
-        if (ex.getMessage() != null) {
-            if (ex.getMessage().contains("not found") || ex.getMessage().contains("Not found")) {
-                status = HttpStatus.NOT_FOUND;
-                error = "Not Found";
-            } else if (ex.getMessage().contains("forbidden") || ex.getMessage().contains("Forbidden")) {
-                status = HttpStatus.FORBIDDEN;
-                error = "Forbidden";
-            } else if (ex.getMessage().contains("exists") || ex.getMessage().contains("duplicate")) {
-                status = HttpStatus.CONFLICT;
-                error = "Conflict";
-            }
+        if (message.toLowerCase().contains("not found")) {
+            status = HttpStatus.NOT_FOUND;
+            error = "Not Found";
+        } else if (message.toLowerCase().contains("forbidden")) {
+            status = HttpStatus.FORBIDDEN;
+            error = "Forbidden";
+        } else if (message.toLowerCase().contains("exists") || message.toLowerCase().contains("duplicate")) {
+            status = HttpStatus.CONFLICT;
+            error = "Conflict";
+        } else if (message.toLowerCase().contains("unauthorized") || message.toLowerCase().contains("wrong password")) {
+            status = HttpStatus.UNAUTHORIZED;
+            error = "Unauthorized";
         }
 
         ErrorResponse response = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
             .status(status.value())
             .error(error)
-            .message(ex.getMessage())
+            .message(message)
             .build();
 
         return ResponseEntity.status(status).body(response);

@@ -72,7 +72,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow all origins for development
+        // Allow all origins for development (restrict in production)
         configuration.setAllowedOriginPatterns(List.of("*"));
         
         // Allow all HTTP methods
@@ -86,7 +86,7 @@ public class SecurityConfig {
         // Expose Authorization header
         configuration.setExposedHeaders(List.of("Authorization"));
         
-        // Allow credentials
+        // Don't allow credentials when using wildcard origin
         configuration.setAllowCredentials(false);
         
         // Cache preflight response for 1 hour
