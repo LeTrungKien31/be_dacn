@@ -60,6 +60,7 @@ public class ActivityController {
         return repo.findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(uid(a), s, e);
     }
 
+    @SuppressWarnings("null")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id, Authentication a){
