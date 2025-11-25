@@ -1,9 +1,17 @@
 package com.example.healthmonitoring.meal.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "foods")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Food {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,64 +38,16 @@ public class Food {
     @Column(length = 500)
     private String imageUrl;
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+    @Column(length = 2000)
+    private String description; // Mô tả món ăn
 
-    public String getName() {
-        return name;
-    }
+    // Quan hệ với Ingredient
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("displayOrder ASC")
+    private List<Ingredient> ingredients = new ArrayList<>();
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getServing() {
-        return serving;
-    }
-
-    public void setServing(String serving) {
-        this.serving = serving;
-    }
-
-    public int getKcalPerServing() {
-        return kcalPerServing;
-    }
-
-    public void setKcalPerServing(int kcalPerServing) {
-        this.kcalPerServing = kcalPerServing;
-    }
-
-    public Double getCarbs() {
-        return carbs;
-    }
-
-    public void setCarbs(Double carbs) {
-        this.carbs = carbs;
-    }
-
-    public Double getProtein() {
-        return protein;
-    }
-
-    public void setProtein(Double protein) {
-        this.protein = protein;
-    }
-
-    public Double getFat() {
-        return fat;
-    }
-
-    public void setFat(Double fat) {
-        this.fat = fat;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
+    // Quan hệ với CookingStep
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("stepNumber ASC")
+    private List<CookingStep> cookingSteps = new ArrayList<>();
 }
