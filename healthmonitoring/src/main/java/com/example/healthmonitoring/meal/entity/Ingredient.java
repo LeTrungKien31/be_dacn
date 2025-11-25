@@ -2,6 +2,7 @@ package com.example.healthmonitoring.meal.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "ingredients")
@@ -15,8 +16,9 @@ public class Ingredient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "food_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_id", nullable = false)
+    @JsonBackReference("food-ingredients")
     private Food food;
 
     @Column(nullable = false)

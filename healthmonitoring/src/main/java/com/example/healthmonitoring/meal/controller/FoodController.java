@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.healthmonitoring.meal.entity.Food;
 import com.example.healthmonitoring.meal.repo.FoodRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Data;
 
 @RestController
 @RequestMapping("/api/v1/foods")
@@ -17,8 +19,7 @@ public class FoodController {
     private final FoodRepository repo;
 
     /**
-     * Lấy danh sách món ăn (tìm kiếm)
-     * Trả về danh sách đơn giản không bao gồm ingredients và cookingSteps
+     * FIX: List foods without loading collections
      */
     @GetMapping
     public List<FoodListDTO> list(@RequestParam(required = false) String q) {
@@ -32,17 +33,16 @@ public class FoodController {
                     .toList();
         }
         
-        // Convert to DTO to avoid lazy loading issues
         return foods.stream()
                 .map(this::toListDTO)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Lấy chi tiết món ăn với nguyên liệu và cách nấu
-     * Sử dụng findByIdWithDetails để fetch tất cả relations trong 1 query
+     * FIX: Get detail with proper transaction and collection loading
      */
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public FoodDetailDTO getDetail(@PathVariable Long id) {
         Food food = repo.findByIdWithDetails(id)
                 .orElseThrow(() -> new RuntimeException("Food not found with id: " + id));
@@ -50,7 +50,9 @@ public class FoodController {
         return toDetailDTO(food);
     }
 
-    // Helper methods to convert to DTOs
+    /**
+     * Convert to list DTO (no collections)
+     */
     private FoodListDTO toListDTO(Food food) {
         FoodListDTO dto = new FoodListDTO();
         dto.setId(food.getId());
@@ -65,6 +67,9 @@ public class FoodController {
         return dto;
     }
 
+    /**
+     * Convert to detail DTO (with collections)
+     */
     private FoodDetailDTO toDetailDTO(Food food) {
         FoodDetailDTO dto = new FoodDetailDTO();
         dto.setId(food.getId());
@@ -77,7 +82,7 @@ public class FoodController {
         dto.setImageUrl(food.getImageUrl());
         dto.setDescription(food.getDescription());
         
-        // Convert ingredients
+        // Convert ingredients (lazy loaded)
         if (food.getIngredients() != null) {
             dto.setIngredients(food.getIngredients().stream()
                     .map(ing -> {
@@ -91,7 +96,7 @@ public class FoodController {
                     .collect(Collectors.toList()));
         }
         
-        // Convert cooking steps
+        // Convert cooking steps (lazy loaded)
         if (food.getCookingSteps() != null) {
             dto.setCookingSteps(food.getCookingSteps().stream()
                     .map(step -> {
@@ -108,8 +113,8 @@ public class FoodController {
         return dto;
     }
 
-    // DTOs
-    @lombok.Data
+    // ========== DTOs ==========
+    @Data
     public static class FoodListDTO {
         private Long id;
         private String name;
@@ -122,7 +127,7 @@ public class FoodController {
         private String description;
     }
 
-    @lombok.Data
+    @Data
     public static class FoodDetailDTO {
         private Long id;
         private String name;
@@ -137,7 +142,7 @@ public class FoodController {
         private List<CookingStepDTO> cookingSteps;
     }
 
-    @lombok.Data
+    @Data
     public static class IngredientDTO {
         private Long id;
         private String name;
@@ -145,7 +150,7 @@ public class FoodController {
         private Integer displayOrder;
     }
 
-    @lombok.Data
+    @Data
     public static class CookingStepDTO {
         private Long id;
         private Integer stepNumber;

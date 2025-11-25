@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "foods")
@@ -39,15 +40,18 @@ public class Food {
     private String imageUrl;
 
     @Column(length = 2000)
-    private String description; // Mô tả món ăn
+    private String description;
 
-    // Quan hệ với Ingredient
-    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    // FIX: Use LAZY fetch and JsonManagedReference to avoid circular references
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("displayOrder ASC")
+    @JsonManagedReference("food-ingredients")
+    @Builder.Default
     private List<Ingredient> ingredients = new ArrayList<>();
 
-    // Quan hệ với CookingStep
-    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("stepNumber ASC")
+    @JsonManagedReference("food-steps")
+    @Builder.Default
     private List<CookingStep> cookingSteps = new ArrayList<>();
 }
