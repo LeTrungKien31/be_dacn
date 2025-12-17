@@ -1,9 +1,11 @@
-# Giai đoạn 1: Build
-FROM maven:3.8.5-openjdk-17 AS build
+# Build bằng Maven & Java 21
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Giai đoạn 2: Run
-FROM openjdk:17-jdk-slim
-COPY --from=build /target/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Chạy bằng Java 21
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]
