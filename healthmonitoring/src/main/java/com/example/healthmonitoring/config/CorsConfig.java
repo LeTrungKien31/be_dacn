@@ -17,8 +17,8 @@ public class CorsConfig {
         
         // Allow Flutter app origins
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
+            "http://localhost:61543",
+            "http://127.0.0.1:8080",
             "http://10.0.2.2:8080", // Android emulator
             "http://192.168.*.*:*",  // Local network
             "*" // For development - restrict in production

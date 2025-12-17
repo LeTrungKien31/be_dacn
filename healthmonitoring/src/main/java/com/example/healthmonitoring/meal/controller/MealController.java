@@ -31,30 +31,35 @@ public class MealController {
      * FIX: Add meal log with proper food loading
      */
     @PostMapping
-    public MealLog add(@RequestBody CreateReq req, Authentication auth) {
-        // Validation
-        if (req == null) {
-            throw new IllegalArgumentException("Request body is required");
-        }
-        if (req.foodId == null || req.foodId <= 0) {
-            throw new IllegalArgumentException("Valid foodId is required");
-        }
-        if (req.servings <= 0) {
-            throw new IllegalArgumentException("servings must be > 0");
-        }
-
-        // FIX: Load food without collections (faster)
-        Food food = foodRepo.findByIdBasic(req.foodId)
-                .orElseThrow(() -> new RuntimeException("Food not found with id: " + req.foodId));
-
-        MealLog log = new MealLog();
-        log.setUserId(getUserId(auth));
-        log.setFood(food);
-        log.setServings(req.servings);
-        log.setTotalKcal((int) Math.round(food.getKcalPerServing() * req.servings));
-        
-        return mealRepo.save(log);
+@ResponseStatus(HttpStatus.NO_CONTENT) // 204, không body
+public void add(@RequestBody CreateReq req, Authentication auth) {
+    if (req == null) {
+        throw new IllegalArgumentException("Request body is required");
     }
+    if (req.foodId == null || req.foodId <= 0) {
+        throw new IllegalArgumentException("Valid foodId is required");
+    }
+    if (req.servings <= 0) {
+        throw new IllegalArgumentException("servings must be > 0");
+    }
+
+    // Nếu chắc chắn đã đăng nhập:
+    if (auth == null || !auth.isAuthenticated()) {
+        throw new RuntimeException("Unauthorized");
+    }
+
+    Food food = foodRepo.findByIdBasic(req.foodId)
+            .orElseThrow(() -> new RuntimeException("Food not found with id: " + req.foodId));
+
+    MealLog log = new MealLog();
+    log.setUserId(getUserId(auth));
+    log.setFood(food);
+    log.setServings(req.servings);
+    log.setTotalKcal((int) Math.round(food.getKcalPerServing() * req.servings));
+
+    mealRepo.save(log);
+}
+
 
     @GetMapping("/today/total")
     public TodayKcalRes todayTotal(Authentication auth) {

@@ -19,7 +19,7 @@ public class FoodController {
     private final FoodRepository repo;
 
     /**
-     * FIX: List foods without loading collections
+     * List foods without loading collections
      */
     @GetMapping
     public List<FoodListDTO> list(@RequestParam(required = false) String q) {
@@ -32,21 +32,24 @@ public class FoodController {
                     .filter(f -> f.getName().toLowerCase().contains(lower))
                     .toList();
         }
-        
+
         return foods.stream()
                 .map(this::toListDTO)
                 .collect(Collectors.toList());
     }
 
     /**
-     * FIX: Get detail with proper transaction and collection loading
+     * Get detail with proper transaction and collection loading
      */
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public FoodDetailDTO getDetail(@PathVariable Long id) {
-        Food food = repo.findByIdWithDetails(id)
+        Food food = repo.findById(id) // hoặc findByIdBasic(id)
                 .orElseThrow(() -> new RuntimeException("Food not found with id: " + id));
-        
+
+        // Lúc bạn gọi food.getIngredients() / getCookingSteps()
+        // Hibernate sẽ lazy-load bằng 2 câu SELECT riêng → không còn
+        // MultipleBagFetchException.
         return toDetailDTO(food);
     }
 
@@ -81,7 +84,7 @@ public class FoodController {
         dto.setFat(food.getFat());
         dto.setImageUrl(food.getImageUrl());
         dto.setDescription(food.getDescription());
-        
+
         // Convert ingredients (lazy loaded)
         if (food.getIngredients() != null) {
             dto.setIngredients(food.getIngredients().stream()
@@ -95,7 +98,7 @@ public class FoodController {
                     })
                     .collect(Collectors.toList()));
         }
-        
+
         // Convert cooking steps (lazy loaded)
         if (food.getCookingSteps() != null) {
             dto.setCookingSteps(food.getCookingSteps().stream()
@@ -109,7 +112,7 @@ public class FoodController {
                     })
                     .collect(Collectors.toList()));
         }
-        
+
         return dto;
     }
 
